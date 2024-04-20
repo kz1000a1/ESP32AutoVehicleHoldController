@@ -215,7 +215,7 @@ void loop() {
   if (if_can_message_receive_is_pendig()) {
     // One or more messages received. Handle all.
     while (twai_receive(&rx_frame, 0) == ESP_OK) {
-      if (DebugMode == CANDUMP || (DebugMode == DEBUG && (rx_frame.identifier == CAN_ID_CCU || rx_frame.identifier == CAN_ID_TCU))) {
+      if (DebugMode == CANDUMP || (DebugMode == DEBUG && (rx_frame.identifier == CAN_ID_CCU || rx_frame.identifier == CAN_ID_TCU || rx_frame.identifier == CAN_ID_MCU || rx_frame.identifier == CAN_ID_SCU))) {
         print_frame(&rx_frame);
       }
 
