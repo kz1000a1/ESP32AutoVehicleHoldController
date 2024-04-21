@@ -1,6 +1,6 @@
-# Engine Auto Stop Eliminator Firmware for SUBARU Levorg VN5
+# Auto Vehicle Hold(AVH) system auto introduce and remove firmware for SUBARU Levorg VN5
 
-This repository contains sources for the engine start-stop system eliminator firmware for SUBARU Levorg VN5, based off of the [EngineAutoStopEliminator](https://github.com/kz1000a1/EngineAutoStopEliminator).
+This repository contains sources for the Auto Vehicle Hold(AVH) system auto introduce and remove firmware for SUBARU Levorg VN5, based off of the [AutoVehicleHoldController](https://github.com/kz1000a1/AutoVehicleHoldController).
 This firmware developed with [TWAI driver by Espressif](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/twai.html) for compatibility.
 Therefore, this firmware may works with most ESP32 based system(M5Stack,M5Atom,ESP32 Dev Module,ESP32C3 Dev Module...)
 .
