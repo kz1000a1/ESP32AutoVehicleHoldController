@@ -40,8 +40,7 @@ void print_frame(twai_message_t* twai_frame) {
   }
 }
 
-
-void send_enable_frame(twai_message_t* rx_frame) {
+void transmit_can_frame(twai_message_t* rx_frame, uint8_t Remove) {
   // Storage for transmit message buffer
   twai_message_t tx_frame;
   tx_frame.identifier = CAN_ID_CCU;
@@ -57,41 +56,13 @@ void send_enable_frame(twai_message_t* rx_frame) {
   } else {
     tx_frame.data[1] = rx_frame->data[1] += 0x01;
   }
-  tx_frame.data[2] = rx_frame->data[2] | 0x02;  // Enable auto behicle hold bit on
-  tx_frame.data[3] = rx_frame->data[3];
-  tx_frame.data[4] = rx_frame->data[4];
-  tx_frame.data[5] = rx_frame->data[5];
-  tx_frame.data[6] = rx_frame->data[6];
-  tx_frame.data[7] = rx_frame->data[7];
-  // Calculate checksum
-  tx_frame.data[0] = (tx_frame.data[1] + tx_frame.data[2] + tx_frame.data[3] + tx_frame.data[4] + tx_frame.data[5] + tx_frame.data[6] + tx_frame.data[7]) + SUM_CHECK_ADDER;
-  if (twai_transmit(&tx_frame, pdMS_TO_TICKS(1000)) != ESP_OK) {
-    if (DebugMode == DEBUG) {
-      Serial.printf("# Error: Failed to queue message for transmission\n");
-    }
-  }
-  if (DebugMode == DEBUG) {
-    Serial.printf("# ");
-    print_frame(&tx_frame);
-  }
-}
-
-void send_disable_frame(twai_message_t* rx_frame) {
-  // Storage for transmit message buffer
-  twai_message_t tx_frame;
-  tx_frame.identifier = CAN_ID_CCU;
-  tx_frame.data_length_code = 8;
-  tx_frame.rtr = 0;
-  tx_frame.extd = 0;
-  tx_frame.ss = 1;
-  tx_frame.self = 0;
-  tx_frame.dlc_non_comp = 0;
-
-  if ((rx_frame->data[1] & 0x0f) == 0x0f) {
-    tx_frame.data[1] = rx_frame->data[1] &= 0xf0;
+  
+  if (Remove) {
+    tx_frame.data[2] = rx_frame->data[2] | 0x01;  // Remove auto behicle hold bit on
   } else {
-    tx_frame.data[1] = rx_frame->data[1] += 0x01;
+    tx_frame.data[2] = rx_frame->data[2] | 0x02;  // Introduce auto behicle hold bit on
   }
+  
   tx_frame.data[2] = rx_frame->data[2] | 0x01;  // Disable auto behicle hold bit on
   tx_frame.data[3] = rx_frame->data[3];
   tx_frame.data[4] = rx_frame->data[4];
@@ -110,7 +81,6 @@ void send_disable_frame(twai_message_t* rx_frame) {
     print_frame(&tx_frame);
   }
 }
-
 
 bool if_can_message_receive_is_pendig() {
 
@@ -291,10 +261,13 @@ void loop() {
 
           case CAN_ID_CCU:
             if (PreviousCanId != CAN_ID_TCU) {  // TCU don't transmit message
-              CcuStatus = ENGINE_STOP;
               TcuStatus = ENGINE_STOP;
+              ScuStatus = ENGINE_STOP;
+              CcuStatus = ENGINE_STOP;
               Status = PROCESSING;
               Retry = 0;
+              R_Gear = 0;
+              Speed = 0;
               if (DebugMode == DEBUG) {
                 // Output Information message
                 Serial.printf("# Information: ENGINE STOP.\n");
@@ -314,6 +287,7 @@ void loop() {
                   Serial.printf("# Information: READY.\n");
                   Serial.printf("# Information: Status (CCU=%d SCU=%d TCU=%d R=%d).\n", CcuStatus, ScuStatus, TcuStatus, R_Gear);
                 }
+              // } else if (ScuStatus == AVH_OFF && (!R_Gear) || (ScuStatus == AVH_ON && R_Gear)) {  // Transmit message for Enable or disable auto vehicle hold
               } else if ((ScuStatus == AVH_OFF && (!R_Gear) && 15 < Speed) || (ScuStatus == AVH_ON && R_Gear)) {  // Transmit message for Enable or disable auto vehicle hold
                 if (DebugMode == DEBUG) {
                   // Output Information message
@@ -329,11 +303,7 @@ void loop() {
                   Retry++;
                   for (int i = 0; i < 5; i++) {
                     delay(50);
-                    if (R_Gear) {
-                      send_disable_frame(&rx_frame);  // Transmit message
-                    } else {
-                      send_enable_frame(&rx_frame);  // Transmit message
-                    }
+                    transmit_can_frame(&rx_frame, R_Gear);  // Transmit message
                   }
                   // Discard message(s) that received during HAL_delay()
                   twai_clear_receive_queue();
