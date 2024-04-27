@@ -217,9 +217,9 @@ void loop() {
                   Serial.printf("# Information: Change Another to Reverse Gear.\n");
                 }
               }
+              R_Gear = (! R_Gear);
             }
             TcuStatus = READY;
-            R_Gear = (rx_frame.data[3] == 0x03);
             PreviousCanId = rx_frame.identifier;
             break;
 
