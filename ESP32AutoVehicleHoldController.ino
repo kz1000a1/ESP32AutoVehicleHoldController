@@ -62,8 +62,7 @@ void transmit_can_frame(twai_message_t* rx_frame, uint8_t Remove) {
   } else {
     tx_frame.data[2] = rx_frame->data[2] | 0x02;  // Introduce auto behicle hold bit on
   }
-  
-  tx_frame.data[2] = rx_frame->data[2] | 0x01;  // Disable auto behicle hold bit on
+ 
   tx_frame.data[3] = rx_frame->data[3];
   tx_frame.data[4] = rx_frame->data[4];
   tx_frame.data[5] = rx_frame->data[5];
