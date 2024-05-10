@@ -200,6 +200,7 @@ void loop() {
         switch (rx_frame.identifier) {
           case CAN_ID_MCU:
             Speed = (rx_frame.data[2] + ((rx_frame.data[3] & 0x1f) << 8)) * 0.05625;
+            PreviousCanId = rx_frame.identifier;
             break;
 
           case CAN_ID_TCU:
@@ -259,7 +260,7 @@ void loop() {
             break;
 
           case CAN_ID_CCU:
-            if (PreviousCanId != CAN_ID_TCU) {  // TCU don't transmit message
+            if (PreviousCanId == CAN_ID_CCU) {  // TCU don't transmit message
               TcuStatus = ENGINE_STOP;
               ScuStatus = ENGINE_STOP;
               CcuStatus = ENGINE_STOP;
